@@ -15,12 +15,22 @@ struct Palavra {
 /* Funcao para ler a proxima palavra valida de um ficheiro (ignora pontuacoes e espacos) */
 /* Retorna 1 se leu uma palavra, 0 se chegou ao fim do ficheiro */
 int ler_proxima_palavra(FILE *arquivo, char *palavra_lida) {
+
+    /*
+    FILE *arquivo: pega o CONTEÚDO de arquivo armazenado na memória
+    char *palavra_lida: É onde a função vai "escrever" a palavra que acabou de ler, devolvendo-a para o main.
+    */
+
     int caractere;
-    int i = 0;
+    int i = 0; /* contador que descreve qual "casinha" do vetor palavra_lida devemos colocar a próxima letra.*/
 
     /* Pula qualquer caractere que nao seja letra (espacos, numeros, pontuacoes) */
     while ((caractere = fgetc(arquivo)) != EOF && !isalpha(caractere)) {
-        /* Apenas avanca pelo ficheiro */
+
+        /* se o caracter lido no ficheiro não for o final(EOF) e NÃO(!) for uma letra entre A e Z */
+
+        /* O laço fica rodando e "comendo" espaços e pontuações 
+        até esbarrar na primeira letra válida de uma palavra (ou até o arquivo acabar).*/
     }
 
     if (caractere == EOF) {
@@ -28,15 +38,18 @@ int ler_proxima_palavra(FILE *arquivo, char *palavra_lida) {
     }
 
     /* Le as letras ate encontrar um espaco ou pontuacao (usando apenas while) */
+    /*Enquanto não for o fim do arquivo E FOR uma letra*/
     while (caractere != EOF && isalpha(caractere)) {
         palavra_lida[i] = tolower(caractere);
         i++;
-        caractere = fgetc(arquivo); 
-       
+        caractere = fgetc(arquivo); /* Lê o próximo caractere do ficheiro para que o while possa testá-lo 
+        na próxima volta. Se for um espaço ou pontuação, o laço para de rodar, 
+        significando que a palavra acabou. */
     }
     
     palavra_lida[i] = '\0'; /* Finaliza a string */
-    return 1;
+    return 1;  /*Avisa o programa principal que a missão foi cumprida 
+    com sucesso e que a palavra guardada em palavra_lida está pronta para ser processada!*/
 }
 
 /* Verifica se uma palavra esta na lista de stop words (Busca Sequencial Simples) */
@@ -51,7 +64,7 @@ int eh_stop_word(char stop_words[][TAM_MAX_PALAVRA], int qtd_stop_words, char *p
 }
 
 /* OBRIGATORIO: Busca Binaria Recursiva */
-/* Retorna o indice da palavra se encontrada, ou -1 se nao existir */
+/* A função vai devolver um número: o índice (a posição) onde a palavra foi encontrada no vetor. Se a palavra não existir, ela devolve -1. */
 int busca_binaria_recursiva(struct Palavra dicionario[], int inicio, int fim, char *alvo) {
     /* No C90, as variaveis tem de ser declaradas no topo da funcao */
     int meio;
@@ -85,17 +98,33 @@ void inserir_ordenado(struct Palavra dicionario[], int *qtd_dicionario, char *no
     indice = busca_binaria_recursiva(dicionario, 0, *qtd_dicionario - 1, nova_palavra);
 
     if (indice != -1) {
-        /* A palavra ja existe, apenas incrementa a frequencia */
         dicionario[indice].frequencia++;
+        /*Se a palavra já existir, a busca devolve a posição exata dela (o indice). 
+        O if é ativado e nós simplesmente vamos a essa posição e somamos +1 na frequencia.
+        Não precisamos de mexer em mais nada.*/
+
     } else {
         /* A palavra nao existe, precisamos inserir na posicao correta (ordem alfabetica) */
-        i = *qtd_dicionario - 1;
+
+        i = *qtd_dicionario - 1; /* olhamos para a última palavra do dicionário.*/
+        /* Se a busca devolver -1, significa que a palavra é nova. Agora entra o else.
+        Imagine que tem uma prateleira de livros organizados alfabeticamente e quer inserir um livro novo. 
+        O que você faz? Começa pelo final da prateleira, empurrando os livros que vêm depois do seu 
+        um espaço para a direita, até abrir um "buraco" no local exato onde o seu livro deve entrar. 
+        É exatamente isto que o código faz.*/
 
         /* Desloca as palavras "maiores" uma posicao para a direita para abrir espaco */
+
+        /* lógica de deslocamento: Insertion Sort*/
         while (i >= 0 && strcmp(dicionario[i].texto, nova_palavra) > 0) {
-            dicionario[i + 1] = dicionario[i];
+            dicionario[i + 1] = dicionario[i];  /*Pega na palavra que está na posição atual (i) e copia-a para a "casinha" imediatamente à direita (i + 1).*/
             i--;
         }
+        /*Significa: "A palavra que estou a olhar agora (dicionario[i]) 
+        vem DEPOIS da nova_palavra no alfabeto?" * Se a resposta for sim (maior que 0), 
+        significa que ela está no caminho. Tem de ser empurrada.
+
+        Se for não (menor que 0), significa que achámos o lugar!*/
 
         /* Insere a nova palavra no espaco que foi aberto */
         strcpy(dicionario[i + 1].texto, nova_palavra);
